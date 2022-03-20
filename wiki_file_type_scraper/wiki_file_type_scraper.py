@@ -162,6 +162,7 @@ def extract_file_ext(value):
         #else:
         #    re.findall(r'\.\w+',value)[0].replace('.','')
 
+df_ft_rm['file_ext'] = df_ft_rm.file_info.apply(extract_file_ext)
 
 def re_filetypes(value):
     #function leverages re to pull 
