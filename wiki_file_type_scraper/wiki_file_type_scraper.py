@@ -196,17 +196,19 @@ def apply_re_ft(df):
         
         ft_values =  re_filetypes(value)
 
-        if  len(ft_values) > 1:
-            
-            for item in ft_values:
-                tempdf = outdf.copy()
-                tempdf.file_ext = item
-                outdf = outdf.append(tempdf)
 
-            outdf =  outdf[outdf.file_ext.isna() == False]
+        if ft_values:
+            if  len(ft_values) > 1:
+                
+                for item in ft_values:
+                    tempdf = outdf.copy()
+                    tempdf.file_ext = item
+                    outdf = outdf.append(tempdf)
 
-        else:
-            outdf.file_ext = ft_values[0]
+                outdf =  outdf[outdf.file_ext.isna() == False]
+
+            else:
+                outdf.file_ext = ft_values[0]
 
         final_df = final_df.append(outdf)
 
