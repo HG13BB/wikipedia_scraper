@@ -213,11 +213,7 @@ def apply_re_ft(df):
     return final_df[final_df.file_ext.str.len() > 1].drop_duplicates()
 
     
-
-df_ft_rm_nulls = apply_re_ft(df_ft_rm[df_ft_rm.file_ext.isna()==True])
-df_ft_rm_nonnulls = df_ft_rm[~df_ft_rm.file_ext.isna()==True]
-
-df_out = df_ft_rm_nonnulls.append(df_ft_rm_nulls)
+df_out = apply_re_ft(df_ft_rm)
 
 def final_output():
     return df_out
