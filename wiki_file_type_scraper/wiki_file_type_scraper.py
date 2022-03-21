@@ -1,14 +1,19 @@
+# %%
 import pandas as pd
 from bs4 import BeautifulSoup
 import requests
 import re
 
+# %%
 wp_filetypes = 'https://en.wikipedia.org/wiki/List_of_file_formats'
 
+# %%
 page = requests.get(wp_filetypes)
 
+# %%
 soup = BeautifulSoup(page.text,'html.parser')
 
+# %%
 #idenfity the heading tags
 #create dict to track starting line of each heading tag
 heading_tags = ["h1", "h2", "h3","h4"]
@@ -26,6 +31,8 @@ content_text = [i.text for i in soup.find_all('li')]
 href_pos = [i.sourceline for i in soup.find_all('a',href=True)]
 href_link = [i['href'] for i in soup.find_all('a',href=True)]
 
+
+# %%
 def get_tag_pos(poslist,contentlist):
     #construct a dict to hold the starting and ending line of each element you are processing
     #input: two lists of same length
@@ -45,13 +52,16 @@ def get_tag_pos(poslist,contentlist):
 
     return poses
 
-
+# %%
 heading_scope = get_tag_pos(heading_pos,heading_text)
 
+# %%
 content_scope = get_tag_pos(content_pos,content_text)
 
+# %%
 links_scope = get_tag_pos(href_pos,href_link)
 
+# %%
 def connect_links(content,links):
     #create dict to connect the text from list content 
     #to relevant tags
@@ -74,8 +84,10 @@ def connect_links(content,links):
     
     return content_links
 
+# %%
 files_links = connect_links(content_scope,links_scope)
 
+# %%
 def join_hdr_content(hdr,content):
     #join the headers with the content (file types and links) based on position
     
@@ -101,8 +113,11 @@ def join_hdr_content(hdr,content):
     return  {k: v for k, v in hdr_cont_out.items() if k.endswith('[edit]')}
     
     
+
+# %%
 final_dict = join_hdr_content(heading_scope,files_links)
 
+# %%
 
 def df_from_wpdict(wpdict):
     #create a dataframe for each item in a dict and append to a main df
@@ -121,23 +136,28 @@ def df_from_wpdict(wpdict):
     
     return filetypes    
 
+# %%
 df_ft = df_from_wpdict(final_dict)
 
+# %%
 def clean_fc(value):
     #clean the text in file_category
     return value.replace('[edit]','')
 
+# %%
 def remove_elrf(df):
     #remove the headings that related to external links and references
     #in the wikipedia article
     return df[~df.file_category.isin(['External links','References','See also'])].reset_index().drop('index',axis=1)
 
 
+# %%
 df_ft.file_category = df_ft.file_category.apply(clean_fc)
 
+# %%
 df_ft_rm = remove_elrf(df_ft)
 
-
+# %%
 def clean_links(value):
     #clean up the wikipedia links to just include this from wikipedia
     if value:
@@ -146,15 +166,18 @@ def clean_links(value):
         else:
             return None
 
+# %%
 df_ft_rm.wikilink = df_ft_rm.wikilink.apply(clean_links)
 
+# %%
 def extract_file_ext(value):
     #extract a file extension from string
     if value:
-        if '-' in value:
+        if '–' in value:
+            return value.split('–')[0]
+        elif '-' in value:
             return value.split('-')[0]
-        if ' – ' in value:
-            return value.split(' – ')[0]
+        
         else:
             pass 
         
@@ -162,8 +185,13 @@ def extract_file_ext(value):
         #else:
         #    re.findall(r'\.\w+',value)[0].replace('.','')
 
-df_ft_rm['file_ext'] = df_ft_rm.file_info.apply(extract_file_ext)
 
+    
+
+# %%
+df_ft_rm['file_ext'] = df_ft_rm.file_info.apply(extract_file_ext).str.replace(' ','')
+
+# %%
 def re_filetypes(value):
     #function leverages re to pull 
     
@@ -179,7 +207,8 @@ def re_filetypes(value):
     elif len(result_nodot) > 0:
         return result_nodot[0]
         
-    
+
+# %%
 def apply_re_ft(df):
     #apply the re filetypes and create new rows for each file extension
     #for one row of df
@@ -195,7 +224,6 @@ def apply_re_ft(df):
         value = list(outdf.file_info)[0]
         
         ft_values =  re_filetypes(value)
-
 
         if ft_values:
             if  len(ft_values) > 1:
@@ -215,7 +243,23 @@ def apply_re_ft(df):
     return final_df[final_df.file_ext.str.len() > 1].drop_duplicates()
 
     
+
+
+
+# %%
 df_out = apply_re_ft(df_ft_rm)
 
+# %%
 def final_output():
     return df_out
+
+# %%
+#fo = final_output()
+
+# %%
+#fo[fo.file_ext == 'CSV']
+
+# %% [markdown]
+# 
+
+
